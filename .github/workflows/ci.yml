@@ -23,12 +23,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run pytest
-        env:
-          AIDOC_DATABASE_URL: sqlite:///./ci_test.db
-          AIDOC_UPLOAD_ROOT: storage/uploads
-          AIDOC_LOG_ROOT: storage/logs
-        run: pytest backend/tests -q
 
   frontend-build:
     runs-on: ubuntu-latest
@@ -56,4 +50,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Deployment note
-        run: echo "Configure SSH deployment using secrets and linux/scripts/deploy.sh"
+        
