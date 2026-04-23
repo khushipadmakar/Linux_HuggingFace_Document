@@ -1,0 +1,8 @@
+# Backend (run from project root)
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8010
+
+# Frontend (run from project root)
+npm.cmd run dev --prefix frontend -- --port 5174
+
+# Open UI
+# http://localhost:5174/
