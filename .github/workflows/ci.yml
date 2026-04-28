@@ -23,7 +23,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install fastapi uvicorn[standard] gunicorn python-multipart pydantic sqlalchemy psycopg2-binary pgvector python-dotenv requests numpy pypdf python-docx alembic pytest httpx transformers sentence-transformers torch
-          
 
       - name: Run backend tests
         env:
@@ -32,26 +31,90 @@ jobs:
           AIDOC_LOG_ROOT: storage/logs
         run: pytest backend/tests -q
 
-frontend-build:
-  runs-on: ubuntu-latest
-  defaults:
-    run:
-      working-directory: frontend
 
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+  frontend-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
 
-    - name: Setup Node
-      uses: actions/setup-node@v4
-      with:
-        node-version: "20"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies (clean)
-      run: npm ci
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
-    - name: Fix vite permissions (important fix)
-      run: chmod +x node_modules/.bin/vite || true
+      - name: Install dependencies (clean install)
+        run: npm ci
 
-    - name: Build frontend
-      run: npm run build
+      - name: Fix vite permissions
+        run: chmod +x node_modules/.bin/vite || true
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [backend-tests, frontend-build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download frontend build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/dist
+
+      - name: Upload frontend to server (SCP)
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "frontend/dist/*"
+          target: "/tmp/frontend-dist"
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo "🚀 Starting deployment..."
+
+            cd /home/ubuntu/Ollama_Project
+
+            echo "📥 Pulling latest code..."
+            git pull origin main
+
+            echo "🐍 Installing backend dependencies..."
+            python3 -m pip install -r requirements.txt
+
+            echo "🔄 Restarting backend service..."
+            sudo systemctl restart aidoc-backend
+
+            echo "🌐 Deploying frontend..."
+            rm -rf /var/www/aidoc-frontend/*
+            cp -r /tmp/frontend-dist/* /var/www/aidoc-frontend/
+
+            echo "🧹 Cleaning temp files..."
+            rm -rf /tmp/frontend-dist
+
+            echo "✅ Deployment completed successfully!"
