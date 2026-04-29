@@ -1,23 +1,6 @@
-npm
-
-
-
 fastapi
-uvicorn[standard]
-gunicorn
-python-multipart
+uvicorn
 pydantic
-sqlalchemy
-psycopg2-binary
-pgvector
-python-dotenv
 requests
-numpy
-pypdf
-python-docx
-alembic
-pytest
-httpx
-transformers
-sentence-transformers
-torch
+numpy (optional)
+scikit-learn (light models only)
