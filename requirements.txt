@@ -2,5 +2,4 @@ fastapi
 uvicorn
 pydantic
 requests
-numpy (optional)
-scikit-learn (light models only)
+numpy 
