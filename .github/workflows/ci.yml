@@ -184,7 +184,7 @@ jobs:
         run: npm ci
 
       - name: Fix vite permissions
-        run: chmod +x node_modules/.bin/vite || true
+        run: "postinstall": ""
 
       - name: Build frontend
         run: npm run build

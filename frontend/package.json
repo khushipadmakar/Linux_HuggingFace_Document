@@ -6,7 +6,7 @@
     "dev": "vite",
     "start": "vite",
     "build": "vite build",
-    "postinstall": "chmod +x node_modules/.bin/vite || true"
+    "postinstall": ""
   },
   "dependencies": {
     "axios": "^1.8.0",
