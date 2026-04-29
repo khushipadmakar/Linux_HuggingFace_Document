@@ -16,4 +16,4 @@ pytest
 httpx
 transformers
 sentence-transformers
-torch
+
